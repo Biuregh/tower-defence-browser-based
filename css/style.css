@@ -1,0 +1,17 @@
+#game-area {
+    display: grid;
+    grid-template-columns: repeat(10,70px);
+    grid-template-rows: repeat(10, 70px);
+    gap:2px;
+
+}
+.cell {
+    width: 70px;
+    height: 70px;
+    background-color: #7BB369;
+    border: 1px solid #439111;
+}
+
+.enemy-path{
+    background-color: #fff;
+}
