@@ -20,10 +20,15 @@ const enemypath ={
         [8, 8], [8, 9]
     ]
 }
-
+const placedTowers={};
+const towerType={
+    "basic-tower":{type: "basic", range: 2, damage: 3, healingtime: 3, level: 1 , emoji:"💣"},
+    "tangle-tower":{type: "tangle", range: 3, damage: 0, healingtime: 5, level: 1, emoji:"🏰"},
+    "sniper-tower":{type: "sniper", range: 8, damage: 3, healingtime: 3, level: 1, emoji:"🚀"}
+}
 
 /*---------------------------- Variables (state) ----------------------------*/
-let difLevel = enemypath.hard;
+let difLevel = enemypath.easy;
 let selectedTower = null;
 
 /*------------------------ Cached Element References ------------------------*/
@@ -31,7 +36,7 @@ const gameArea = document.getElementById("game-area");
 const basicTower = document.getElementById("basic-tower");
 const tangleTower= document.getElementById("tangle-tower");
 const sniperTower = document.getElementById("sniper-tower");
-
+const updateButton = document.getElementById("update");
 /*--------------------------------- Class -----------------------------------*/
 
 class Tower{
@@ -41,8 +46,11 @@ class Tower{
         this.damage= damage;
         this.healingtime = healingtime;
         this.level = level;
+        this.emoji = this.emoji;
     }
 }
+
+
 /*-------------------------------- Functions --------------------------------*/
 //create grid dynamically
 for(let row=0; row< gridSize; row++){
@@ -62,5 +70,31 @@ difLevel.forEach(([row, col])=>{
 
 /*----------------------------- Event Listeners -----------------------------*/
 
+//select tower to drag
+Object.keys(towerType).forEach(type => {
+    const towerDiv = document.getElementById(type);
+    towerDiv.addEventListener("dragstart", event =>{
+        event.dataTransfer.setData("tower-id", type)
+    })
+})
 
+//allows dropping in game area (by defult browser doesn't allow)
+gameArea.addEventListener("dragover" , event =>{
+    if(event.target.classList.contains("cell")){
+        event.preventDefault();
+    }
+})
 
+//drop tower in grid
+gameArea.addEventListener("drop" , event =>{
+    if(!event.target.classList.contains("cell")) return;
+    event.preventDefault();
+    const id=event.dataTransfer.getData("tower-id");
+    if(!id || event.target.classList.contains("has-tower") || event.target.classList.contains("enemy-path")) return;
+    const {type, range, damage, healingtime, level, emoji} = towerType[id];
+    const tower = new Tower(type, range, damage, healingtime, level);
+    event.target.textContent = emoji;
+    event.target.classList.add("has-tower");
+    const position = `${event.target.dataset.row}, ${event.target.dataset.col}`;
+    placedTowers[position] = tower;
+})

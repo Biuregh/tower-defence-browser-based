@@ -15,3 +15,20 @@
 .enemy-path{
     background-color: #fff;
 }
+
+#tower-select{
+    display: grid;
+    grid-template-columns: repeat(5, 140px);
+    grid-template-rows: repeat(1, 140px);
+    gap: 6px;
+    padding: 50px 0 0 10px;
+}
+
+.tower {
+    font-size: 50px;
+}
+
+.cell {
+    font-size: 50px;
+    text-align: center;
+}
