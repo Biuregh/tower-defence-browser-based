@@ -24,12 +24,16 @@ const placedTowers={};
 const towerType={
     "basic-tower":{type: "basic", range: 2, damage: 3, healingtime: 3, level: 1 , emoji:"💣"},
     "tangle-tower":{type: "tangle", range: 3, damage: 0, healingtime: 5, level: 1, emoji:"🏰"},
-    "sniper-tower":{type: "sniper", range: 8, damage: 3, healingtime: 3, level: 1, emoji:"🚀"}
+    "sniper-tower":{type: "sniper", range: 4, damage: 3, healingtime: 3, level: 1, emoji:"🚀"}
 }
+const enemies= [];
 
 /*---------------------------- Variables (state) ----------------------------*/
 let difLevel = enemypath.easy;
 let selectedTower = null;
+let playerLives = 2;
+let coin = 50;
+let baseLevel=1;
 
 /*------------------------ Cached Element References ------------------------*/
 const gameArea = document.getElementById("game-area");
@@ -47,6 +51,42 @@ class Tower{
         this.healingtime = healingtime;
         this.level = level;
         this.emoji = this.emoji;
+    }
+}
+
+class Enemy{
+    constructor(path, baseLevel){
+        this.path =path;
+        this.enemyPosition= 0;
+        this.row = path[0][0];
+        this.col=path[0][1];
+        this.eHlth= baseLevel *3;
+        this.speed = 500;
+        this.alive = true;
+    }
+
+    move(){
+        if(!this.alive) return
+        this.enemyPosition++;
+        if(this.enemyPosition < this.path.length){
+            this.row=this.path[this.enemyPosition][0];
+            this.col =this.path[this.enemyPosition][1];
+        }
+        else{
+            this.alive=false;
+            playerLives--;
+            updateLives();
+        }
+    }
+
+    damage(amount){
+        if(!this.alive) return;
+        this.eHlth -= amount;
+        if(this.eHlth<=0){
+            this.alive=false;
+            coin = baseLevel * 3;
+            updateCoin();
+        }
     }
 }
 
@@ -68,6 +108,54 @@ difLevel.forEach(([row, col])=>{
     cell.classList.add("enemy-path");
 });
 
+//player lives
+const updateLives = () =>{
+    const livesDisplay = document.getElementById("player-lives");
+    if(playerLives<0){
+        clearInterval(generateEnemy);
+        clearInterval(moveEnemies);
+        return;
+    }
+    livesDisplay.textContent = "❤️".repeat(playerLives);
+}
+
+//collect coin
+const updateCoin=()=>{
+    const coinDisplay = document.getElementById("coin");
+    coinDisplay.textContent = `💰 ${coin}`
+}
+
+//create enemy
+const generateEnemy = () =>{
+    const newEnemy = new Enemy(difLevel, baseLevel);
+    enemies.push(newEnemy);
+    const cell = document.querySelector(`[data-row="${newEnemy.row}"][data-col="${newEnemy.col}"]`);
+    const enemyDiv = document.createElement("div");
+    enemyDiv.classList.add("enemy");
+    enemyDiv.textContent = "🧟‍♂️";
+    cell.appendChild(enemyDiv);
+    newEnemy.domElement = enemyDiv; //inside enemy object saves enemy's element
+}
+
+const moveEnemies = () =>{
+    enemies.forEach(enemy =>{
+        if(!enemy.alive) return;
+        const oldCell= document.querySelector(`[data-row="${enemy.row}"][data-col="${enemy.col}"]`);//current cell
+        if(enemy.domElement.parentElement === oldCell){
+            oldCell.removeChild(enemy.domElement);
+        };
+        enemy.move();
+        if(enemy.alive){
+            const newCell = document.querySelector(`[data-row="${enemy.row}"][data-col="${enemy.col}"]`);//get new cell after move
+            newCell.appendChild(enemy.domElement)
+        }else{
+            enemy.domElement.remove();
+        }
+    })
+}
+
+setInterval(generateEnemy,3000);
+setInterval(moveEnemies,500);
 /*----------------------------- Event Listeners -----------------------------*/
 
 //select tower to drag
@@ -95,6 +183,6 @@ gameArea.addEventListener("drop" , event =>{
     const tower = new Tower(type, range, damage, healingtime, level);
     event.target.textContent = emoji;
     event.target.classList.add("has-tower");
-    const position = `${event.target.dataset.row}, ${event.target.dataset.col}`;
+    const position = `${event.target.dataset.row}, ${event.target.dataset.col}`; 
     placedTowers[position] = tower;
 })
