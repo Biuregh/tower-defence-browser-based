@@ -1,3 +1,4 @@
+
 /*-------------------------------- Constants --------------------------------*/
 const gridSize = 10;
 const enemypath ={
@@ -31,7 +32,7 @@ const enemies= [];
 /*---------------------------- Variables (state) ----------------------------*/
 let difLevel = enemypath.easy;
 let selectedTower = null;
-let playerLives = 2;
+let playerLives = 3;
 let coin = 50;
 let baseLevel=1;
 
@@ -44,13 +45,13 @@ const updateButton = document.getElementById("update");
 /*--------------------------------- Class -----------------------------------*/
 
 class Tower{
-    constructor(type, range, damage, healingtime, level){
+    constructor(type, range, damage, healingtime, level, emoji){
         this.type=type;
         this.range=range;
         this.damage= damage;
         this.healingtime = healingtime;
         this.level = level;
-        this.emoji = this.emoji;
+        this.emoji = emoji;
     }
 }
 
@@ -63,10 +64,15 @@ class Enemy{
         this.eHlth= baseLevel *3;
         this.speed = 500;
         this.alive = true;
+        this.justStart=true;
     }
 
     move(){
-        if(!this.alive) return
+        if(!this.alive) return;
+        if(this.justStart){
+            this.justStart=false;
+            return;
+        }
         this.enemyPosition++;
         if(this.enemyPosition < this.path.length){
             this.row=this.path[this.enemyPosition][0];
@@ -74,8 +80,6 @@ class Enemy{
         }
         else{
             this.alive=false;
-            playerLives--;
-            updateLives();
         }
     }
 
@@ -84,8 +88,11 @@ class Enemy{
         this.eHlth -= amount;
         if(this.eHlth<=0){
             this.alive=false;
-            coin = baseLevel * 3;
+            coin += baseLevel * 3;
             updateCoin();
+            if(this.domElement.parentElement){
+                this.domElement.remove();
+            }
         }
     }
 }
@@ -111,12 +118,12 @@ difLevel.forEach(([row, col])=>{
 //player lives
 const updateLives = () =>{
     const livesDisplay = document.getElementById("player-lives");
-    if(playerLives<0){
-        clearInterval(generateEnemy);
-        clearInterval(moveEnemies);
-        return;
-    }
     livesDisplay.textContent = "❤️".repeat(playerLives);
+    if(playerLives <= 0){
+        clearInterval(enemyInterval);
+        clearInterval(moveInterval);
+        alert("game over")
+    }
 }
 
 //collect coin
@@ -137,7 +144,9 @@ const generateEnemy = () =>{
     newEnemy.domElement = enemyDiv; //inside enemy object saves enemy's element
 }
 
+//enemy attacks
 const moveEnemies = () =>{
+    const aliveEnemies = [];
     enemies.forEach(enemy =>{
         if(!enemy.alive) return;
         const oldCell= document.querySelector(`[data-row="${enemy.row}"][data-col="${enemy.col}"]`);//current cell
@@ -147,18 +156,45 @@ const moveEnemies = () =>{
         enemy.move();
         if(enemy.alive){
             const newCell = document.querySelector(`[data-row="${enemy.row}"][data-col="${enemy.col}"]`);//get new cell after move
-            newCell.appendChild(enemy.domElement)
+            newCell.appendChild(enemy.domElement);
+            aliveEnemies.push(enemy);
         }else{
-            enemy.domElement.remove();
+            if(enemy.enemyPosition === enemy.path.length){
+                if(playerLives > 0){
+                    playerLives--;
+                    updateLives();
+                }
+            }
+            if(enemy.domElement.parentElement){
+                enemy.domElement.remove();
+            }
         }
-    })
+    });
+    enemies.length=0;
+    enemies.push(...aliveEnemies); // spread operator, pushes each item from aliveEnemeies to enemies array
 }
 
-setInterval(generateEnemy,3000);
-setInterval(moveEnemies,500);
+//tower attacks
+const towerAttack= ()=>{
+    for(const position in placedTowers){
+        const [row, col] = position.split(",").map(Number);
+        const tower = placedTowers[position];
+        for(const enemy of enemies){
+            const distance=Math.abs(enemy.row-row)+Math.abs(enemy.col-col);
+            if(distance > tower.range) continue;//skip if enemy out of range
+            if(!enemy.alive) continue;//skip this one and move to the next
+            enemy.damage(tower.damage);
+        }
+    }
+}
+
+//const enemyInterval = setInterval(generateEnemy, 3000);
+//const moveInterval = setInterval(moveEnemies, 500);
+//setInterval(towerAttack, 1000); 
+
 /*----------------------------- Event Listeners -----------------------------*/
 
-//select tower to drag
+//select tower to dragac
 Object.keys(towerType).forEach(type => {
     const towerDiv = document.getElementById(type);
     towerDiv.addEventListener("dragstart", event =>{
