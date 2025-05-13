@@ -24,17 +24,20 @@ const enemypath ={
 const placedTowers={};
 const towerType={
     "basic-tower":{type: "basic", range: 2, damage: 3, healingtime: 3, level: 1 , emoji:"💣"},
-    "tangle-tower":{type: "tangle", range: 3, damage: 0, healingtime: 5, level: 1, emoji:"🏰"},
+    "tangle-tower":{type: "tangle", range: 3, damage: 0, healingtime: 5, level: 1, emoji:"🏹"},
     "sniper-tower":{type: "sniper", range: 4, damage: 3, healingtime: 3, level: 1, emoji:"🚀"}
 }
-const enemies= [];
+
 
 /*---------------------------- Variables (state) ----------------------------*/
 let difLevel = enemypath.easy;
 let selectedTower = null;
 let playerLives = 3;
-let coin = 50;
+let coin = 500;
 let baseLevel=1;
+let enemies= [];
+let waveIsGoing = false;
+let currentWave = 0;
 
 /*------------------------ Cached Element References ------------------------*/
 const gameArea = document.getElementById("game-area");
@@ -42,6 +45,9 @@ const basicTower = document.getElementById("basic-tower");
 const tangleTower= document.getElementById("tangle-tower");
 const sniperTower = document.getElementById("sniper-tower");
 const updateButton = document.getElementById("update");
+const baseUpdateBtn= document.getElementById("base-update-btn");
+const baseLevelDisplay = document.getElementById("base-level");
+const countdownEl= document.getElementById("timer");
 /*--------------------------------- Class -----------------------------------*/
 
 class Tower{
@@ -109,6 +115,8 @@ for(let row=0; row< gridSize; row++){
         gameArea.appendChild(cell);
     };
 };
+
+
 //enemy's path dynamically
 difLevel.forEach(([row, col])=>{
     const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
@@ -186,11 +194,42 @@ const towerAttack= ()=>{
             enemy.damage(tower.damage);
         }
     }
+};
+
+//base upgrade
+const baseUpgradeCost=() => baseLevel * 120;
+
+//base upgrade cost display
+const showBaseUpgradeCost = () =>{
+    const cost = baseUpgradeCost();
+    baseUpdateBtn.textContent = `⬆️ ${cost} 🟡`
 }
 
-//const enemyInterval = setInterval(generateEnemy, 3000);
-//const moveInterval = setInterval(moveEnemies, 500);
-//setInterval(towerAttack, 1000); 
+//time cal until next waive based on base level and difficulty level
+const countdownTime = () =>{
+    let normTime = 10;
+    if(difLevel === enemypath.medium) normTime -= 1;
+    else if(difLevel === enemypath.hard) normTime -=2;
+    finalTime = Math.floor(normTime - baseLevel * 0.5)
+    return Math.max(3, finalTime);
+}
+const enemyMoveInterval = ()=>{
+    let normTime = 1000;
+    if(difLevel === enemypath.medium) normTime -= 10;
+    else if(difLevel === enemypath.hard) normTime -=20;
+    finalTime = Math.floor(normTime - baseLevel * 5)
+    return Math.max(500, finalTime);
+}
+
+
+
+updateCoin();
+showBaseUpgradeCost();
+updateLives();
+const moveInterval = setInterval(moveEnemies, enemyMoveInterval());
+const enemyInterval = setInterval(generateEnemy, 3000);
+
+setInterval(towerAttack, 1000); 
 
 /*----------------------------- Event Listeners -----------------------------*/
 
@@ -222,3 +261,17 @@ gameArea.addEventListener("drop" , event =>{
     const position = `${event.target.dataset.row}, ${event.target.dataset.col}`; 
     placedTowers[position] = tower;
 })
+
+//Base level incrrease
+baseUpdateBtn.addEventListener("click", ()=>{
+    const cost = baseUpgradeCost();
+    if(coin >= cost){
+        coin -= cost;
+        baseLevel++;
+        updateCoin();
+        baseLevelDisplay.textContent =`Level ${baseLevel}`;
+        showBaseUpgradeCost();
+    }else{
+        alert("Not enogh coins!");
+    }
+});

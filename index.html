@@ -8,15 +8,26 @@
     <script defer src="js/app.js"></script>
 </head>
 <body>
-    <div id="game-area"></div>
-    <div id="player-lives">❤️❤️❤️</div>
-    <div id="coin">💰 0</div>
-    <div id="tower-select">
-        <div class="tower" draggable="false" id="hospital">🏥</div>
-        <div class="tower" draggable="false" id="update">➕</div>
-        <div class="tower" draggable="true" id="basic-tower">💣</div>
-        <div class="tower" draggable="true" id="tangle-tower">🏰</div>
-        <div class="tower" draggable="true" id="sniper-tower">🚀</div>
+    <div id="game-frame">
+        <div id="start">🏁</div>
+        <div id="game-area"></div>
+        <div id="base">
+            <div id="base-level">Level 1</div>
+            <div id="base-emoji">🏰</div>
+            <div id="base-update"><button type="button" id="base-update-btn"></button></div>
+        </div>
+        <div id="sidebar">
+            <div id="player-lives">❤️❤️❤️</div>
+            <div id="coin">💰 0</div>
+        </div>
+        <div id="tower-select">
+            <!--<div class="tower" draggable="false" id="hospital">🏥</div>-->
+           <!-- <div class="tower" draggable="false" id="update">➕</div>-->
+            <div class="tower" draggable="true" id="basic-tower">💣</div>
+            <div class="tower" draggable="true" id="tangle-tower">🏹</div>
+            <div class="tower" draggable="true" id="sniper-tower">🚀</div>
+        </div>
     </div>
+
 </body>
 </html>

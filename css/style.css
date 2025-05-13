@@ -3,6 +3,8 @@
     grid-template-columns: repeat(10,70px);
     grid-template-rows: repeat(10, 70px);
     gap:2px;
+    grid-column: 2;
+    grid-row: 1;
 
 }
 .cell {
@@ -10,12 +12,12 @@
     height: 70px;
     background-color: #7BB369;
     border: 1px solid #439111;
+    font-size: 50px;
+    text-align: center;
 }
-
 .enemy-path{
     background-color: #fff;
 }
-
 #tower-select{
     display: grid;
     grid-template-columns: repeat(5, 140px);
@@ -23,12 +25,63 @@
     gap: 6px;
     padding: 50px 0 0 10px;
 }
-
 .tower {
     font-size: 50px;
 }
-
-.cell {
+#game-frame{
+    display: grid;
+    grid-template-columns: auto auto auto auto; /* You can adjust column widths */
+    grid-template-rows: auto auto;
+    gap: 10px;
+    width: 1080px;
+}
+#start {
+    grid-column: 1;
+    grid-row: 1;
     font-size: 50px;
+    padding: 10px;
+    padding-top: 70px;
+}
+#base {
+    grid-column: 3;
+    grid-row: 1;
+    padding: 10px;
+    padding-top: 550px;
+    width:150px
+
+}
+#base-level {
+    font-size: 20px;
     text-align: center;
 }
+
+#base-emoji{
+    font-size: 80px;
+    text-align: center;
+}
+div#base-update {
+    display: grid;
+}
+button#base-update-btn {
+    font-size: 15px;
+    text-align: center;
+    border: 1px solid #b7b9b5;
+    border-radius: 5%;
+    margin: 0 auto;
+}
+#sidebar {
+    grid-column: 4;
+    grid-row: 1;
+    font-size: 18px;
+    width: 200px;
+}
+#tower-select {
+    grid-column: 1 / -1; /* spans all columns */
+    grid-row: 2;
+    display: grid;
+    grid-template-columns: repeat(5, 140px);
+    grid-template-rows: 140px;
+    gap: 6px;
+    padding: 20px 0 0 10px;
+}
+
