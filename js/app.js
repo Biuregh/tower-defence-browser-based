@@ -330,7 +330,6 @@ setInterval(towerAttack, 1000);
 
 //select tower to dragac
 Object.keys(towerType).forEach(type => {
-    console.log(type);
     const towerDiv = document.getElementById(type);
     towerDiv.addEventListener("dragstart", event =>{
         event.dataTransfer.setData("tower-id", type)

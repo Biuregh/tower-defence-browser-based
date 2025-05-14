@@ -12,7 +12,7 @@ I chose to build a tower defense game because it offered an ideal balance of cre
 
 ## Getting Started
 
-**Live Site:** [Play Gridwatcher](https://your-deployment-url.com)
+**Live Site:** [Play Gridwatcher](https://biuregh.github.io/tower-defence-browser-based/)
 
 ### How to Play
 
