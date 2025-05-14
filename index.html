@@ -7,7 +7,15 @@
     <link rel="stylesheet" href="css/style.css">
     <script defer src="js/app.js"></script>
 </head>
-<body>
+<body>    
+    <div id="game-title">
+        <h1>Gridwatch</h1>
+        <p>Drag and Drop towers onto the grid to defend your base.  </p>          
+        <p>Earn Coins by defeating enemies.</p>
+        <p>Upgrade your towers and base to handle stronger waves.</p>
+        <p> Survive as long as you can!</p>
+    </div>
+    <div id="game-over" class="hidden"> Game Over </div>
     <div id="game-frame">
         <div id="start">🏁</div>
         <div id="game-area"></div>
@@ -17,14 +25,22 @@
             <div id="base-update"><button type="button" id="base-update-btn"></button></div>
         </div>
         <div id="sidebar">
-            <div id="player-lives">❤️❤️❤️</div>
-            <div id="coin">💰 0</div>
+            <h2>Game Info</h2>
+            <label for="difficulty-select">Difficulty:</label>
+                <select id="difficulty-select">
+                    <option value="easy" selected>Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
+            <p>Player Lives: <span id="player-lives"></span></p>
+            <p id="coin-p">Coins: <span id="coin"></span></p>
+            <p>Timer: <span id="timer"></span></p>
+            <button id="restart-btn">Restart</button> 
         </div>
         <div id="tower-select">
-            <!--<div class="tower" draggable="false" id="hospital">🏥</div>-->
-           <!-- <div class="tower" draggable="false" id="update">➕</div>-->
-            <div class="tower" draggable="true" id="basic-tower">💣</div>
-            <div class="tower" draggable="true" id="tangle-tower">🏹</div>
+            <div class="tower" draggable="false" id="hospital"></div>
+            <div class="tower" draggable="true" id="basic-tower">🏹</div>
+            <!--<div class="tower" draggable="true" id="tangle-tower">⏳</div>-->
             <div class="tower" draggable="true" id="sniper-tower">🚀</div>
         </div>
     </div>

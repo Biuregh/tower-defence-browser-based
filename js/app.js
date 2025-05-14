@@ -23,8 +23,8 @@ const enemypath ={
 }
 const placedTowers={};
 const towerType={
-    "basic-tower":{type: "basic", range: 2, damage: 3, healingtime: 3, level: 1 , emoji:"💣"},
-    "tangle-tower":{type: "tangle", range: 3, damage: 0, healingtime: 5, level: 1, emoji:"🏹"},
+    "basic-tower":{type: "basic", range: 2, damage: 3, healingtime: 3, level: 1 , emoji:"🏹"},
+    //"tangle-tower":{type: "tangle", range: 3, damage: 0, healingtime: 5, level: 1, emoji:"⏳"},
     "sniper-tower":{type: "sniper", range: 4, damage: 3, healingtime: 3, level: 1, emoji:"🚀"}
 }
 
@@ -37,8 +37,9 @@ let coin = 500;
 let baseLevel=1;
 let enemies= [];
 let waveIsGoing = false;
-let currentWave = 0;
-
+let timerInterval;
+let survivalTime = 0;
+let timerOn = true;
 /*------------------------ Cached Element References ------------------------*/
 const gameArea = document.getElementById("game-area");
 const basicTower = document.getElementById("basic-tower");
@@ -47,7 +48,9 @@ const sniperTower = document.getElementById("sniper-tower");
 const updateButton = document.getElementById("update");
 const baseUpdateBtn= document.getElementById("base-update-btn");
 const baseLevelDisplay = document.getElementById("base-level");
-const countdownEl= document.getElementById("timer");
+const survivalTimeEl = document.getElementById("timer");
+const restartButton = document.getElementById("restart-btn");
+const difficultySelect = document.getElementById("difficulty-select");
 /*--------------------------------- Class -----------------------------------*/
 
 class Tower{
@@ -67,7 +70,7 @@ class Enemy{
         this.enemyPosition= 0;
         this.row = path[0][0];
         this.col=path[0][1];
-        this.eHlth= baseLevel *3;
+        this.eHlth= baseLevel *20;
         this.speed = 500;
         this.alive = true;
         this.justStart=true;
@@ -89,14 +92,17 @@ class Enemy{
         }
     }
 
-    damage(amount){
-        if(!this.alive) return;
+    damage(amount) {
+        if (!this.alive) return;
         this.eHlth -= amount;
-        if(this.eHlth<=0){
-            this.alive=false;
+        if (this.healthDisplay) {
+            this.healthDisplay.textContent = this.eHlth;
+        }
+        if (this.eHlth <= 0) {
+            this.alive = false;
             coin += baseLevel * 3;
             updateCoin();
-            if(this.domElement.parentElement){
+            if (this.domElement && this.domElement.parentElement) {
                 this.domElement.remove();
             }
         }
@@ -130,7 +136,10 @@ const updateLives = () =>{
     if(playerLives <= 0){
         clearInterval(enemyInterval);
         clearInterval(moveInterval);
-        alert("game over")
+        document.getElementById("game-over").style.display = "block";
+        survivalTime = 0
+        timerOn =false;
+
     }
 }
 
@@ -145,11 +154,19 @@ const generateEnemy = () =>{
     const newEnemy = new Enemy(difLevel, baseLevel);
     enemies.push(newEnemy);
     const cell = document.querySelector(`[data-row="${newEnemy.row}"][data-col="${newEnemy.col}"]`);
+    const enemyContainer = document.createElement("div");
+    enemyContainer.classList.add("enemy-div");
+    const healthDisplay = document.createElement("div");
+    healthDisplay.classList.add("enemy-health");
+    healthDisplay.textContent = newEnemy.eHlth;
     const enemyDiv = document.createElement("div");
     enemyDiv.classList.add("enemy");
     enemyDiv.textContent = "🧟‍♂️";
-    cell.appendChild(enemyDiv);
-    newEnemy.domElement = enemyDiv; //inside enemy object saves enemy's element
+    enemyContainer.appendChild(healthDisplay);
+    enemyContainer.appendChild(enemyDiv);
+    cell.appendChild(enemyContainer);
+    newEnemy.domElement = enemyContainer; //inside enemy object saves enemy's element
+    newEnemy.healthDisplay=healthDisplay//inside enemy object saves enemy's health element
 }
 
 //enemy attacks
@@ -196,6 +213,70 @@ const towerAttack= ()=>{
     }
 };
 
+//timer format
+const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
+};
+
+//timer
+const updateSurvivalTime = () => {
+    if(timerOn){
+        survivalTime++; 
+        survivalTimeEl.textContent = formatTime(survivalTime);
+    }
+
+};
+
+//restart
+const restartGame = () => {
+    document.querySelectorAll(".cell").forEach(cell =>{
+        cell.className = "cell";
+    })
+    // Reset variables
+    playerLives = 3;
+    coin = 500;
+    baseLevel = 1;
+    survivalTime = 0; 
+    enemies = [];
+    Object.keys(placedTowers).forEach(tower => delete placedTowers[tower]);
+    waveIsGoing = false;
+    timerOn = true; 
+    // Clean up grid cells
+    document.querySelectorAll(".cell").forEach(cell => {
+        cell.className = "cell";;
+        cell.textContent = "";  // Clear the towers from the grid
+        cell.classList.remove("has-tower");
+        cell.classList.remove("enemy-path");
+    });
+    // Reset the enemy path
+    difLevel.forEach(([row, col]) => {
+        const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+        cell.classList.add("enemy-path");
+    });
+    // Reset the base button and level
+    baseLevelDisplay.textContent = `Level ${baseLevel}`;
+    showBaseUpgradeCost();
+    // Hide game over
+    document.getElementById("game-over").style.display = "none";
+    // Re-start intervals
+    clearInterval(moveInterval);  
+    clearInterval(enemyInterval);  
+    clearInterval(timerInterval);  
+    // Start new intervals
+    moveInterval = setInterval(moveEnemies, enemyMoveInterval());
+    enemyInterval = setInterval(generateEnemy, 3000);
+    // Start the timer interval once
+    timerInterval = setInterval(updateSurvivalTime, 1000);
+    // Start the tower attack interval
+    setInterval(towerAttack, 1000);
+    // Reset UI elements
+    updateCoin();
+    updateLives();
+};
+
+
 //base upgrade
 const baseUpgradeCost=() => baseLevel * 120;
 
@@ -205,29 +286,43 @@ const showBaseUpgradeCost = () =>{
     baseUpdateBtn.textContent = `⬆️ ${cost} 🟡`
 }
 
-//time cal until next waive based on base level and difficulty level
-const countdownTime = () =>{
-    let normTime = 10;
-    if(difLevel === enemypath.medium) normTime -= 1;
-    else if(difLevel === enemypath.hard) normTime -=2;
-    finalTime = Math.floor(normTime - baseLevel * 0.5)
-    return Math.max(3, finalTime);
-}
+//enemy move
 const enemyMoveInterval = ()=>{
     let normTime = 1000;
     if(difLevel === enemypath.medium) normTime -= 10;
     else if(difLevel === enemypath.hard) normTime -=20;
-    finalTime = Math.floor(normTime - baseLevel * 5)
-    return Math.max(500, finalTime);
+    const finalTime = Math.floor(normTime - baseLevel * 5)
+    return Math.max(200, finalTime);
 }
+
+//difficalty level
+difficultySelect.addEventListener("change", (event) => {
+    const selected = event.target.value;
+    if(selected === "easy"){
+        difLevel = enemypath.easy;
+    } else if(selected === "medium"){
+        difLevel = enemypath.medium;
+    } else if(selected === "hard"){
+        difLevel = enemypath.hard;
+    }
+    document.querySelectorAll(".cell").forEach(cell=> {
+        cell.classList.remove("enemy-path");
+    });
+    difLevel.forEach(([row, col]) =>{
+        const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+        if(cell) cell.classList.add("enemy-path");
+    });
+    restartGame();
+});
 
 
 
 updateCoin();
 showBaseUpgradeCost();
 updateLives();
-const moveInterval = setInterval(moveEnemies, enemyMoveInterval());
-const enemyInterval = setInterval(generateEnemy, 3000);
+let moveInterval = setInterval(moveEnemies, enemyMoveInterval());
+let enemyInterval = setInterval(generateEnemy, 3000);
+setInterval(updateSurvivalTime, 1000);
 
 setInterval(towerAttack, 1000); 
 
@@ -235,6 +330,7 @@ setInterval(towerAttack, 1000);
 
 //select tower to dragac
 Object.keys(towerType).forEach(type => {
+    console.log(type);
     const towerDiv = document.getElementById(type);
     towerDiv.addEventListener("dragstart", event =>{
         event.dataTransfer.setData("tower-id", type)
@@ -258,11 +354,21 @@ gameArea.addEventListener("drop" , event =>{
     const tower = new Tower(type, range, damage, healingtime, level);
     event.target.textContent = emoji;
     event.target.classList.add("has-tower");
-    const position = `${event.target.dataset.row}, ${event.target.dataset.col}`; 
+    const position = `${event.target.dataset.row},${event.target.dataset.col}`; 
     placedTowers[position] = tower;
 })
 
-//Base level incrrease
+//not enough coins
+function notEnoughCoins() {
+    const counter = document.getElementById("coin-p");
+    counter.classList.add("highlight");
+  
+    setTimeout(() => {
+      counter.classList.remove("highlight");
+    }, 1000);
+  }
+
+//base level incrrease
 baseUpdateBtn.addEventListener("click", ()=>{
     const cost = baseUpgradeCost();
     if(coin >= cost){
@@ -272,6 +378,9 @@ baseUpdateBtn.addEventListener("click", ()=>{
         baseLevelDisplay.textContent =`Level ${baseLevel}`;
         showBaseUpgradeCost();
     }else{
-        alert("Not enogh coins!");
+        notEnoughCoins();
     }
 });
+
+//reset button
+restartButton.addEventListener("click", restartGame);
